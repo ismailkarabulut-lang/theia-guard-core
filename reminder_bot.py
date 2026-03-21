@@ -33,11 +33,11 @@ def fs(log,nt):
 def dl(tc,cid,text):
  content=text[4:].strip()
  if not content:ac(tc,"sendMessage",{"chat_id":int(cid),"text":"Format: !log konu #heyecan 5"});return
- emo="notr";inten=3;topic=content;nc=n(content)
+ emo="notr";inten=3;topic=content
  for e in ["heyecan","merak","kaygi","ofke","sevinc","uzgu","rahatlama","notr"]:
   tg="#"+e
-  if tg in nc:
-   emo=e;idx=nc.find(tg);topic=(content[:idx]+content[idx+len(tg):]).strip();break
+  if tg in n(topic):
+   emo=e;idx=n(topic).find(tg);ot=topic[idx:idx+len(tg)];topic=topic.replace(ot,"").strip();break
  m=re.search(r"#(\d)",content)
  if m:inten=max(1,min(5,int(m.group(1))));topic=re.sub(r"#\d","",topic).strip()
  topic=re.sub(r"\s+"," ",topic).strip(" -\u2013\u2014,;:.")
