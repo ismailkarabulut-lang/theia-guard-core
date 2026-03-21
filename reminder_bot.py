@@ -1,4 +1,3 @@
-cd ~/Masaüstü/theia-guard-core && rm -f reminder_bot.py && cat > reminder_bot.py << 'END'
 import json,re,time,requests
 from datetime import datetime,timedelta
 from pathlib import Path
@@ -166,7 +165,9 @@ def dr(rid):
   if r["id"]==rid and r["status"]=="active":r["status"]="deleted";sj(RF,rems);return True
  return False
 def hm(tc,update):
- msg=update.get("message",{});raw=str(msg["chat"]["id"])
+ msg=update.get("message",{})
+ text=msg.get("text","").strip()
+ cid=str(msg["chat"]["id"])
  if not text:return
  tl=n(text)
  if tl in ("/start","/help"):
@@ -203,4 +204,3 @@ def main():
   except Exception as e:print("Hata: "+str(e))
   time.sleep(2)
 if __name__=="__main__":main()
-END
