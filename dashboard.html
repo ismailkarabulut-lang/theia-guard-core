@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Theia Guard</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #080c14;
+    --surface: #0d1520;
+    --surface2: #111d2e;
+    --border: #1a2d45;
+    --accent: #00d4ff;
+    --accent2: #7c3aed;
+    --green: #00ff88;
+    --yellow: #ffd60a;
+    --red: #ff3b5c;
+    --orange: #ff6b2b;
+    --text: #e8f4f8;
+    --muted: #4a6b8a;
+    --card-radius: 16px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+    padding-bottom: 80px;
+  }
+
+  /* Animated bg */
+  body::before {
+    content: '';
+    position: fixed;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(ellipse at 20% 20%, rgba(0,212,255,0.04) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(124,58,237,0.04) 0%, transparent 50%);
+    animation: bgPulse 8s ease-in-out infinite alternate;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  @keyframes bgPulse {
+    0% { transform: scale(1) rotate(0deg); }
+    100% { transform: scale(1.1) rotate(5deg); }
+  }
+
+  .content { position: relative; z-index: 1; }
+
+  /* Header */
+  .header {
+    padding: 20px 20px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    background: rgba(8,12,20,0.95);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(20px);
+  }
+
+  .header-left { display: flex; align-items: center; gap: 12px; }
+
+  .logo-icon {
+    width: 40px; height: 40px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    box-shadow: 0 0 20px rgba(0,212,255,0.3);
+  }
+
+  .logo-text { display: flex; flex-direction: column; }
+  .logo-title { font-size: 18px; font-weight: 800; letter-spacing: 1px; }
+  .logo-title span { color: var(--accent); }
+  .logo-sub { font-size: 11px; color: var(--green); font-family: 'Space Mono', monospace; letter-spacing: 0.5px; }
+
+  .status-dot {
+    width: 8px; height: 8px;
+    background: var(--green);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+    margin-right: 4px;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(0,255,136,0.4); }
+    50% { opacity: 0.8; box-shadow: 0 0 0 6px rgba(0,255,136,0); }
+  }
+
+  .header-actions { display: flex; gap: 8px; }
+  .icon-btn {
+    width: 36px; height: 36px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .icon-btn:active { transform: scale(0.92); background: var(--surface2); }
+
+  /* Sections */
+  .section { padding: 20px 20px 0; }
+  .section-title {
+    font-size: 11px;
+    font-family: 'Space Mono', monospace;
+    color: var(--muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+
+  /* Stats grid */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--card-radius);
+    padding: 16px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s;
+  }
+
+  .stat-card:active { transform: scale(0.97); }
+
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+
+  .stat-card.total::before { background: var(--accent); }
+  .stat-card.auto::before { background: var(--green); }
+  .stat-card.approved::before { background: var(--yellow); }
+  .stat-card.blocked::before { background: var(--red); }
+
+  .stat-icon { font-size: 22px; margin-bottom: 8px; }
+  .stat-value {
+    font-size: 36px;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .stat-card.total .stat-value { color: var(--accent); }
+  .stat-card.auto .stat-value { color: var(--green); }
+  .stat-card.approved .stat-value { color: var(--yellow); }
+  .stat-card.blocked .stat-value { color: var(--red); }
+  .stat-label { font-size: 12px; color: var(--muted); }
+
+  /* Pending approval */
+  .pending-card {
+    background: var(--surface);
+    border: 1px solid var(--yellow);
+    border-radius: var(--card-radius);
+    padding: 18px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .pending-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,214,10,0.05), transparent);
+    pointer-events: none;
+  }
+
+  .pending-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .pending-badge {
+    background: var(--yellow);
+    color: #000;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-family: 'Space Mono', monospace;
+    animation: blink 1.5s infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+  }
+
+  .pending-title { font-size: 14px; font-weight: 600; color: var(--muted); }
+
+  .command-box {
+    background: rgba(0,0,0,0.4);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 14px;
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    color: var(--text);
+    word-break: break-all;
+  }
+
+  .risk-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-family: 'Space Mono', monospace;
+    padding: 4px 10px;
+    border-radius: 20px;
+    margin-bottom: 16px;
+  }
+  .risk-badge.medium { background: rgba(255,107,43,0.15); color: var(--orange); border: 1px solid rgba(255,107,43,0.3); }
+  .risk-badge.high { background: rgba(255,59,92,0.15); color: var(--red); border: 1px solid rgba(255,59,92,0.3); }
+  .risk-badge.low { background: rgba(0,255,136,0.1); color: var(--green); border: 1px solid rgba(0,255,136,0.2); }
+  .risk-badge.critical { background: rgba(255,59,92,0.25); color: var(--red); border: 1px solid var(--red); }
+
+  .approval-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  .btn {
+    padding: 14px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    font-family: 'Syne', sans-serif;
+    letter-spacing: 0.5px;
+    transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+
+  .btn:active { transform: scale(0.95); }
+
+  .btn-approve {
+    background: var(--green);
+    color: #000;
+    box-shadow: 0 4px 20px rgba(0,255,136,0.3);
+  }
+
+  .btn-deny {
+    background: rgba(255,59,92,0.15);
+    color: var(--red);
+    border: 1px solid rgba(255,59,92,0.4);
+  }
+
+  .no-pending {
+    text-align: center;
+    padding: 24px;
+    color: var(--muted);
+    font-size: 13px;
+    font-family: 'Space Mono', monospace;
+  }
+
+  .no-pending .check { font-size: 32px; margin-bottom: 8px; }
+
+  /* Log list */
+  .log-list { display: flex; flex-direction: column; gap: 8px; }
+
+  .log-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    animation: slideIn 0.3s ease;
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .log-risk-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .dot-low { background: var(--green); }
+  .dot-medium { background: var(--yellow); }
+  .dot-high { background: var(--orange); }
+  .dot-critical { background: var(--red); }
+
+  .log-info { flex: 1; min-width: 0; }
+  .log-cmd {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .log-meta { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+  .log-decision {
+    font-size: 10px;
+    font-family: 'Space Mono', monospace;
+    padding: 3px 8px;
+    border-radius: 20px;
+    flex-shrink: 0;
+  }
+  .decision-auto { background: rgba(0,255,136,0.1); color: var(--green); }
+  .decision-approved { background: rgba(255,214,10,0.1); color: var(--yellow); }
+  .decision-denied { background: rgba(255,59,92,0.1); color: var(--red); }
+  .decision-blocked { background: rgba(255,59,92,0.2); color: var(--red); border: 1px solid rgba(255,59,92,0.3); }
+
+  /* Bottom nav */
+  .bottom-nav {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: rgba(8,12,20,0.95);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid var(--border);
+    display: flex;
+    padding: 8px 0 16px;
+    z-index: 100;
+  }
+
+  .nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+    background: none;
+    color: var(--muted);
+    font-family: 'Syne', sans-serif;
+  }
+
+  .nav-item.active { color: var(--accent); }
+  .nav-item:active { transform: scale(0.9); }
+  .nav-icon { font-size: 20px; }
+  .nav-label { font-size: 10px; font-weight: 600; letter-spacing: 0.5px; }
+
+  /* Page sections */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* Refresh btn */
+  .refresh-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--accent);
+    padding: 8px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-family: 'Space Mono', monospace;
+    cursor: pointer;
+    margin: 16px 20px 0;
+    transition: all 0.2s;
+  }
+  .refresh-btn:active { transform: scale(0.95); }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 90px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-family: 'Space Mono', monospace;
+    opacity: 0;
+    transition: all 0.3s;
+    z-index: 200;
+    white-space: nowrap;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* Spinner */
+  .spinner {
+    width: 20px; height: 20px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 20px auto;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Empty */
+  .empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    line-height: 1.8;
+  }
+  .empty-icon { font-size: 40px; margin-bottom: 12px; }
+
+  /* Connection error */
+  .conn-error {
+    background: rgba(255,59,92,0.1);
+    border: 1px solid rgba(255,59,92,0.3);
+    border-radius: 12px;
+    padding: 14px;
+    margin: 20px;
+    font-size: 12px;
+    font-family: 'Space Mono', monospace;
+    color: var(--red);
+    text-align: center;
+  }
+
+  /* Spacer */
+  .spacer { height: 16px; }
+</style>
+</head>
+<body>
+<div class="content">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-left">
+      <div class="logo-icon">🛡</div>
+      <div class="logo-text">
+        <div class="logo-title">THEIA <span>GUARD</span></div>
+        <div class="logo-sub"><span class="status-dot" style="display:inline-block;width:6px;height:6px;background:var(--green);border-radius:50%;margin-right:4px;"></span>GÜVENLİK AKTİF</div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <div class="icon-btn" onclick="refreshAll()">🔄</div>
+      <div class="icon-btn">⚙️</div>
+    </div>
+  </div>
+
+  <!-- ANA SAYFA -->
+  <div id="page-home" class="page active">
+    <div class="section">
+      <div class="section-title">Genel Durum</div>
+      <div class="stats-grid">
+        <div class="stat-card total">
+          <div class="stat-icon">📊</div>
+          <div class="stat-value" id="stat-total">—</div>
+          <div class="stat-label">Toplam Komut</div>
+        </div>
+        <div class="stat-card auto">
+          <div class="stat-icon">⚡</div>
+          <div class="stat-value" id="stat-auto">—</div>
+          <div class="stat-label">Otomatik</div>
+        </div>
+        <div class="stat-card approved">
+          <div class="stat-icon">✅</div>
+          <div class="stat-value" id="stat-approved">—</div>
+          <div class="stat-label">Onaylanan</div>
+        </div>
+        <div class="stat-card blocked">
+          <div class="stat-icon">⛔</div>
+          <div class="stat-value" id="stat-blocked">—</div>
+          <div class="stat-label">Engellenen</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="spacer"></div>
+
+    <div class="section">
+      <div class="section-title">Bekleyen Onay</div>
+      <div id="pending-section"></div>
+    </div>
+
+    <div class="spacer"></div>
+
+    <div class="section">
+      <div class="section-title">Son İşlemler</div>
+      <div id="log-preview" class="log-list"></div>
+    </div>
+    <div class="spacer"></div>
+  </div>
+
+  <!-- ONAYLAR -->
+  <div id="page-approvals" class="page">
+    <div class="section">
+      <div class="section-title">Bekleyen Onay</div>
+      <div id="pending-full"></div>
+    </div>
+    <div class="spacer"></div>
+  </div>
+
+  <!-- LOG -->
+  <div id="page-log" class="page">
+    <button class="refresh-btn" onclick="loadLogs()">🔄 Yenile</button>
+    <div class="spacer"></div>
+    <div class="section">
+      <div class="section-title">Komut Geçmişi</div>
+      <div id="log-full" class="log-list"></div>
+    </div>
+    <div class="spacer"></div>
+  </div>
+
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav">
+  <button class="nav-item active" onclick="navigate('home', this)">
+    <span class="nav-icon">🏠</span>
+    <span class="nav-label">Ana Sayfa</span>
+  </button>
+  <button class="nav-item" onclick="navigate('approvals', this)">
+    <span class="nav-icon">✅</span>
+    <span class="nav-label">Onaylar</span>
+  </button>
+  <button class="nav-item" onclick="navigate('log', this)">
+    <span class="nav-icon">📋</span>
+    <span class="nav-label">Log</span>
+  </button>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+const API = 'http://192.168.1.128:5000';
+
+function showToast(msg, color = 'var(--accent)') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.borderColor = color;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function navigate(page, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  el.classList.add('active');
+  if (page === 'log') loadLogs();
+  if (page === 'approvals') loadPendingFull();
+}
+
+async function loadStats() {
+  try {
+    const r = await fetch(API + '/api/stats');
+    const d = await r.json();
+    document.getElementById('stat-total').textContent = d.total ?? 0;
+    document.getElementById('stat-auto').textContent = d.auto ?? 0;
+    document.getElementById('stat-approved').textContent = d.approved ?? 0;
+    document.getElementById('stat-blocked').textContent = d.blocked ?? 0;
+  } catch(e) {
+    document.getElementById('stat-total').textContent = '!';
+  }
+}
+
+function riskColor(level) {
+  const map = { low: 'var(--green)', medium: 'var(--yellow)', high: 'var(--orange)', critical: 'var(--red)' };
+  return map[level] || 'var(--muted)';
+}
+
+function riskDotClass(level) {
+  return 'dot-' + (level || 'low');
+}
+
+function decisionClass(decision) {
+  if (!decision) return 'decision-auto';
+  if (decision.includes('blocked')) return 'decision-blocked';
+  if (decision.includes('denied')) return 'decision-denied';
+  if (decision.includes('approved') && decision !== 'auto_approved') return 'decision-approved';
+  return 'decision-auto';
+}
+
+function decisionLabel(decision) {
+  if (!decision) return 'auto';
+  if (decision === 'auto_approved') return 'AUTO';
+  if (decision.includes('blocked')) return 'ENGELLENDİ';
+  if (decision.includes('denied')) return 'REDDEDİLDİ';
+  if (decision.includes('approved')) return 'ONAYLANDI';
+  return decision.toUpperCase();
+}
+
+function formatTime(ts) {
+  if (!ts) return '';
+  try {
+    const d = new Date(ts);
+    return d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) + ' · ' +
+           d.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit' });
+  } catch { return ts; }
+}
+
+function renderPending(data, containerId) {
+  const el = document.getElementById(containerId);
+  if (!data) {
+    el.innerHTML = `<div class="no-pending"><div class="check">✅</div>Bekleyen onay yok</div>`;
+    return;
+  }
+  const risk = data.risk_level || 'medium';
+  el.innerHTML = `
+    <div class="pending-card">
+      <div class="pending-header">
+        <div class="pending-badge">⏳ BEKLEYEN</div>
+        <div class="pending-title">Onay gerekiyor</div>
+      </div>
+      <div class="command-box">${data.command || '—'}</div>
+      <div class="risk-badge ${risk}">
+        <span>●</span> ${risk.toUpperCase()} RİSK
+      </div>
+      <div class="approval-btns">
+        <button class="btn btn-approve" onclick="doApprove()">✅ Onayla</button>
+        <button class="btn btn-deny" onclick="doDeny()">❌ Reddet</button>
+      </div>
+    </div>`;
+}
+
+async function loadPending() {
+  try {
+    const r = await fetch(API + '/api/pending');
+    const d = await r.json();
+    renderPending(d, 'pending-section');
+  } catch(e) {
+    document.getElementById('pending-section').innerHTML =
+      `<div class="conn-error">⚠️ Sunucuya bağlanılamıyor<br>192.168.1.128:5000</div>`;
+  }
+}
+
+async function loadPendingFull() {
+  try {
+    const r = await fetch(API + '/api/pending');
+    const d = await r.json();
+    renderPending(d, 'pending-full');
+  } catch(e) {
+    document.getElementById('pending-full').innerHTML =
+      `<div class="conn-error">⚠️ Sunucuya bağlanılamıyor</div>`;
+  }
+}
+
+async function doApprove() {
+  try {
+    await fetch(API + '/api/approve', { method: 'POST' });
+    showToast('✅ Onaylandı', 'var(--green)');
+    setTimeout(() => { loadPending(); loadPendingFull(); loadStats(); }, 500);
+  } catch(e) { showToast('Hata!', 'var(--red)'); }
+}
+
+async function doDeny() {
+  try {
+    await fetch(API + '/api/deny', { method: 'POST' });
+    showToast('❌ Reddedildi', 'var(--red)');
+    setTimeout(() => { loadPending(); loadPendingFull(); loadStats(); }, 500);
+  } catch(e) { showToast('Hata!', 'var(--red)'); }
+}
+
+function renderLogItem(entry) {
+  return `
+    <div class="log-item">
+      <div class="log-risk-dot ${riskDotClass(entry.risk_level)}"></div>
+      <div class="log-info">
+        <div class="log-cmd">${entry.command || '—'}</div>
+        <div class="log-meta">${formatTime(entry.timestamp)}</div>
+      </div>
+      <div class="log-decision ${decisionClass(entry.decision)}">${decisionLabel(entry.decision)}</div>
+    </div>`;
+}
+
+async function loadLogs() {
+  const el = document.getElementById('log-full');
+  const preview = document.getElementById('log-preview');
+  if (el) el.innerHTML = '<div class="spinner"></div>';
+  try {
+    const r = await fetch(API + '/api/logs');
+    const d = await r.json();
+    if (!d.length) {
+      if (el) el.innerHTML = '<div class="empty"><div class="empty-icon">📋</div>Henüz kayıt yok</div>';
+      if (preview) preview.innerHTML = '<div class="empty"><div class="empty-icon">📋</div>Henüz kayıt yok</div>';
+      return;
+    }
+    const html = d.map(renderLogItem).join('');
+    if (el) el.innerHTML = html;
+    if (preview) preview.innerHTML = d.slice(0,3).map(renderLogItem).join('');
+  } catch(e) {
+    if (el) el.innerHTML = '<div class="conn-error">⚠️ Sunucuya bağlanılamıyor</div>';
+  }
+}
+
+function refreshAll() {
+  loadStats();
+  loadPending();
+  loadLogs();
+  showToast('🔄 Yenilendi');
+}
+
+// Auto refresh every 5 seconds for pending
+setInterval(() => {
+  loadPending();
+  loadPendingFull();
+  loadStats();
+}, 5000);
+
+// Initial load
+refreshAll();
+</script>
+</body>
+</html>
