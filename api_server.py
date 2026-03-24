@@ -1,5 +1,6 @@
 from flask import Flask, jsonify, request, send_file
 from flask_cors import CORS
+from datetime import datetime
 from pathlib import Path
 import json
 
@@ -120,13 +121,14 @@ def chat_proxy():
     )
     return jsonify(r.json())
 NOTES = BASE / "notes.json"
-
+REMINDERS_PATH = BASE / "reminders.json"
+# --- NOTLAR ---
 @app.route("/api/notes", methods=["GET"])
-def get_notes():
+def get_notes_list():
     return jsonify(read_json(NOTES) or [])
 
 @app.route("/api/notes", methods=["POST"])
-def add_note():
+def add_note_v1():
     data = request.get_json()
     notes = read_json(NOTES) or []
     note = {
@@ -138,19 +140,36 @@ def add_note():
     Path(NOTES).write_text(json.dumps(notes, indent=2, ensure_ascii=False))
     return jsonify(note)
 
-@app.route("/api/notes/<int:note_id>", methods=["DELETE"])
-def delete_note(note_id):
-    notes = read_json(NOTES) or []
-    notes = [n for n in notes if n["id"] != note_id]
-    Path(NOTES).write_text(json.dumps(notes, indent=2, ensure_ascii=False))
-    return jsonify({"ok": True})
-REMINDERS_PATH = BASE / "reminders.json"
+@app.route('/api/add_note', methods=['POST'])
+def add_note_v2():
+    data = request.json
+    with open('notes.json', 'a') as f:
+        f.write(data.get('note', '') + '\n')
+    return jsonify({"status": "success", "message": "Not kaydedildi"})
 
+# --- HATIRLATICI BURADA BAŞLIYOR ---
 @app.route("/api/reminders", methods=["GET"])
 def get_reminders():
     data = read_json(REMINDERS_PATH) or []
     active = [r for r in data if r.get("status") == "active"]
     return jsonify(active)
+
+@app.route('/api/add_reminder', methods=['POST'])
+def add_reminder_direct():
+    data = request.json
+    try:
+        with open('reminders.json', 'r+') as f:
+            try:
+                reminders = json.load(f)
+            except json.JSONDecodeError:
+                reminders = []
+            reminders.append(data)
+            f.seek(0)
+            json.dump(reminders, f, indent=4)
+    except FileNotFoundError:
+        with open('reminders.json', 'w') as f:
+            json.dump([data], f, indent=4)
+    return jsonify({"status": "success", "message": "Hatırlatıcı kuruldu"})
 
 @app.route("/api/reminders/<int:rid>", methods=["DELETE"])
 def delete_reminder(rid):
