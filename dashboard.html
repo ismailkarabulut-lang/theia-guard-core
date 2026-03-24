@@ -404,6 +404,40 @@
     transform: translateX(-50%) translateY(0);
   }
 
+  /* News */
+  .news-list { display: flex; flex-direction: column; gap: 10px; }
+
+  .news-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px;
+    text-decoration: none;
+    display: block;
+    transition: all 0.2s;
+    animation: slideIn 0.3s ease;
+  }
+
+  .news-item:active { transform: scale(0.98); background: var(--surface2); }
+
+  .news-title {
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.5;
+    margin-bottom: 6px;
+  }
+
+  .news-meta {
+    font-size: 10px;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .news-source { color: var(--accent); font-size: 10px; }
+
   /* Spinner */
   .spinner {
     width: 20px; height: 20px;
@@ -464,27 +498,27 @@
   <!-- ANA SAYFA -->
   <div id="page-home" class="page active">
     <div class="section">
-      <div class="section-title">Genel Durum</div>
+      <div class="section-title">Hızlı Erişim</div>
       <div class="stats-grid">
-        <div class="stat-card total">
-          <div class="stat-icon">📊</div>
-          <div class="stat-value" id="stat-total">—</div>
-          <div class="stat-label">Toplam Komut</div>
+        <div class="stat-card total" onclick="navigate('news', document.querySelector('.nav-item:nth-child(4)'));" style="cursor:pointer;">
+          <div class="stat-icon">📰</div>
+          <div class="stat-value" style="font-size:22px;margin-bottom:6px;">AI</div>
+          <div class="stat-label">Haberler</div>
         </div>
-        <div class="stat-card auto">
-          <div class="stat-icon">⚡</div>
-          <div class="stat-value" id="stat-auto">—</div>
-          <div class="stat-label">Otomatik</div>
+        <div class="stat-card auto" onclick="navigate('notes', document.querySelectorAll('.nav-item')[1]);" style="cursor:pointer;">
+          <div class="stat-icon">📝</div>
+          <div class="stat-value" style="font-size:22px;margin-bottom:6px;">Not</div>
+          <div class="stat-label">& Planlama</div>
         </div>
-        <div class="stat-card approved">
-          <div class="stat-icon">✅</div>
-          <div class="stat-value" id="stat-approved">—</div>
-          <div class="stat-label">Onaylanan</div>
+        <div class="stat-card approved" onclick="navigate('reminders', document.querySelectorAll('.nav-item')[2]);" style="cursor:pointer;">
+          <div class="stat-icon">⏰</div>
+          <div class="stat-value" style="font-size:22px;margin-bottom:6px;">Hatır</div>
+          <div class="stat-label">latıcılar</div>
         </div>
-        <div class="stat-card blocked">
-          <div class="stat-icon">⛔</div>
-          <div class="stat-value" id="stat-blocked">—</div>
-          <div class="stat-label">Engellenen</div>
+        <div class="stat-card blocked" onclick="window.location.href='http://192.168.1.128:5000/chat';" style="cursor:pointer;">
+          <div class="stat-icon">🤖</div>
+          <div class="stat-value" style="font-size:22px;margin-bottom:6px;">Theia</div>
+          <div class="stat-label">Chatbot</div>
         </div>
       </div>
     </div>
@@ -525,21 +559,68 @@
     <div class="spacer"></div>
   </div>
 
+  <!-- HABERLER -->
+  <div id="page-news" class="page">
+    <button class="refresh-btn" onclick="loadNews()">🔄 Yenile</button>
+    <div class="spacer"></div>
+    <div class="section">
+      <div class="section-title">Yapay Zeka Haberleri</div>
+      <div id="news-list"></div>
+    </div>
+    <div class="spacer"></div>
+  </div>
+
+</div>
+
+  <!-- NOTLAR -->
+  <div id="page-notes" class="page">
+    <div class="section">
+      <div class="section-title">Not & Planlama</div>
+      <div style="display:flex;gap:8px;margin-bottom:14px;">
+        <textarea id="note-input" placeholder="Notunu yaz..." style="flex:1;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px;color:var(--text);font-family:Syne,sans-serif;font-size:14px;resize:none;outline:none;height:80px;"></textarea>
+      </div>
+      <button onclick="addNote()" style="width:100%;padding:12px;background:var(--accent);border:none;border-radius:12px;color:#000;font-size:14px;font-weight:700;font-family:Syne,sans-serif;cursor:pointer;margin-bottom:20px;">+ Not Ekle</button>
+      <div id="notes-list" class="log-list"></div>
+    </div>
+    <div class="spacer"></div>
+  </div>
+
+  <!-- HATIRLATICLAR -->
+  <div id="page-reminders" class="page">
+    <div class="section">
+      <div class="section-title">Hatırlatıcılar</div>
+      <div style="margin-bottom:14px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;">
+        <div style="font-size:11px;color:var(--muted);font-family:Space Mono,monospace;margin-bottom:8px;">Hatırlatıcı eklemek için reminder_bot.py üzerinden Telegram'ı kullan</div>
+        <div style="font-size:12px;color:var(--accent);font-family:Space Mono,monospace;">"yarın saat 14 toplantı hatırlat"</div>
+      </div>
+      <div id="reminders-list" class="log-list"></div>
+    </div>
+    <div class="spacer"></div>
+  </div>
+
 </div>
 
 <!-- BOTTOM NAV -->
-<div class="bottom-nav">
+<div class="bottom-nav" style="display:grid;grid-template-columns:repeat(5,1fr);">
   <button class="nav-item active" onclick="navigate('home', this)">
     <span class="nav-icon">🏠</span>
-    <span class="nav-label">Ana Sayfa</span>
+    <span class="nav-label">Ana</span>
   </button>
-  <button class="nav-item" onclick="navigate('approvals', this)">
-    <span class="nav-icon">✅</span>
-    <span class="nav-label">Onaylar</span>
+  <button class="nav-item" onclick="navigate('notes', this)">
+    <span class="nav-icon">📝</span>
+    <span class="nav-label">Notlar</span>
+  </button>
+  <button class="nav-item" onclick="navigate('reminders', this)">
+    <span class="nav-icon">⏰</span>
+    <span class="nav-label">Hatır</span>
   </button>
   <button class="nav-item" onclick="navigate('log', this)">
     <span class="nav-icon">📋</span>
     <span class="nav-label">Log</span>
+  </button>
+  <button class="nav-item" onclick="navigate('news', this)">
+    <span class="nav-icon">📰</span>
+    <span class="nav-label">Haber</span>
   </button>
 </div>
 
@@ -564,6 +645,9 @@ function navigate(page, el) {
   el.classList.add('active');
   if (page === 'log') loadLogs();
   if (page === 'approvals') loadPendingFull();
+  if (page === 'news') loadNews();
+  if (page === 'notes') loadNotes();
+  if (page === 'reminders') loadReminders();
 }
 
 async function loadStats() {
@@ -706,6 +790,118 @@ async function loadLogs() {
   } catch(e) {
     if (el) el.innerHTML = '<div class="conn-error">⚠️ Sunucuya bağlanılamıyor</div>';
   }
+}
+
+
+async function loadNews() {
+  const el = document.getElementById('news-list');
+  if (!el) return;
+  el.innerHTML = '<div class="spinner"></div>';
+  try {
+    const r = await fetch(API + '/api/news');
+    const d = await r.json();
+    if (!d.length) {
+      el.innerHTML = '<div class="empty"><div class="empty-icon">📰</div>Haber bulunamadı</div>';
+      return;
+    }
+    el.className = 'news-list';
+    el.innerHTML = d.map((item, i) => {
+      const src = item.link ? new URL(item.link).hostname.replace('www.','') : '';
+      return `<a class="news-item" href="${item.link}" target="_blank">
+        <div class="news-title">${item.title}</div>
+        <div class="news-meta">
+          <span class="news-source">${src}</span>
+          <span>·</span>
+          <span>${item.published ? item.published.substring(0,16) : ''}</span>
+        </div>
+      </a>`;
+    }).join('');
+  } catch(e) {
+    el.innerHTML = '<div class="conn-error">⚠️ Haberler yüklenemedi</div>';
+  }
+}
+
+
+async function loadNotes() {
+  const el = document.getElementById('notes-list');
+  if (!el) return;
+  try {
+    const r = await fetch(API + '/api/notes');
+    const d = await r.json();
+    if (!d.length) {
+      el.innerHTML = '<div class="empty"><div class="empty-icon">📝</div>Henüz not yok</div>';
+      return;
+    }
+    el.innerHTML = d.reverse().map(n => `
+      <div class="log-item" style="align-items:flex-start;">
+        <div class="log-info">
+          <div class="log-cmd" style="white-space:normal;font-family:Syne,sans-serif;">${n.text}</div>
+          <div class="log-meta">${formatTime(n.timestamp)}</div>
+        </div>
+        <button onclick="deleteNote(${n.id})" style="background:rgba(255,59,92,0.15);border:1px solid rgba(255,59,92,0.3);color:var(--red);border-radius:8px;padding:4px 10px;font-size:12px;cursor:pointer;flex-shrink:0;">Sil</button>
+      </div>`).join('');
+  } catch(e) {
+    el.innerHTML = '<div class="conn-error">⚠️ Yüklenemedi</div>';
+  }
+}
+
+async function addNote() {
+  const input = document.getElementById('note-input');
+  const text = input.value.trim();
+  if (!text) return;
+  try {
+    await fetch(API + '/api/notes', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({text})
+    });
+    input.value = '';
+    showToast('📝 Not kaydedildi', 'var(--green)');
+    loadNotes();
+  } catch(e) { showToast('Hata!', 'var(--red)'); }
+}
+
+async function deleteNote(id) {
+  try {
+    await fetch(API + '/api/notes/' + id, {method: 'DELETE'});
+    showToast('Silindi', 'var(--muted)');
+    loadNotes();
+  } catch(e) { showToast('Hata!', 'var(--red)'); }
+}
+
+async function loadReminders() {
+  const el = document.getElementById('reminders-list');
+  if (!el) return;
+  try {
+    const r = await fetch(API + '/api/reminders');
+    const d = await r.json();
+    if (!d.length) {
+      el.innerHTML = '<div class="empty"><div class="empty-icon">⏰</div>Aktif hatırlatıcı yok</div>';
+      return;
+    }
+    el.innerHTML = d.map(rem => {
+      const dt = rem.datetime ? new Date(rem.datetime).toLocaleString('tr-TR', {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) : '';
+      return `
+        <div class="log-item">
+          <div class="log-risk-dot dot-medium"></div>
+          <div class="log-info">
+            <div class="log-cmd" style="font-family:Syne,sans-serif;">${rem.task}</div>
+            <div class="log-meta">${dt}</div>
+          </div>
+          <button onclick="deleteReminder(${rem.id})" style="background:rgba(255,59,92,0.15);border:1px solid rgba(255,59,92,0.3);color:var(--red);border-radius:8px;padding:4px 10px;font-size:12px;cursor:pointer;flex-shrink:0;">Sil</button>
+        </div>`;
+    }).join('');
+  } catch(e) {
+    el.innerHTML = '<div class="conn-error">⚠️ Yüklenemedi</div>';
+  }
+}
+
+async function deleteReminder(id) {
+  try {
+    await fetch(API + '/api/reminders/' + id, {method: 'DELETE'});
+    showToast('Hatırlatıcı silindi', 'var(--muted)');
+    loadReminders();
+  } catch(e) { showToast('Hata!', 'var(--red)'); }
 }
 
 function refreshAll() {

@@ -1,4 +1,12 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { loggingState } from "../logging/state.js";
+import {
+  applyStatusScanDefaults,
+  createStatusMemorySearchConfig,
+  createStatusMemorySearchManager,
+  createStatusSummary,
+  withTemporaryEnv,
+} from "./status.scan.test-helpers.js";
 
 const mocks = vi.hoisted(() => ({
   resolveConfigPath: vi.fn(() => `/tmp/openclaw-status-fast-json-missing-${process.pid}.json`),
@@ -18,79 +26,21 @@ const mocks = vi.hoisted(() => ({
   buildPluginCompatibilityNotices: vi.fn(() => []),
 }));
 
+let originalForceStderr: boolean;
+
 beforeEach(() => {
   vi.clearAllMocks();
-  mocks.hasPotentialConfiguredChannels.mockReturnValue(false);
-  mocks.readBestEffortConfig.mockResolvedValue({
-    session: {},
-    gateway: {},
-    agents: {
-      defaults: {
-        memorySearch: {
-          provider: "local",
-          local: { modelPath: "/tmp/model.gguf" },
-          fallback: "none",
-        },
-      },
-    },
+  originalForceStderr = loggingState.forceConsoleToStderr;
+  loggingState.forceConsoleToStderr = false;
+  applyStatusScanDefaults(mocks, {
+    sourceConfig: createStatusMemorySearchConfig(),
+    resolvedConfig: createStatusMemorySearchConfig(),
+    summary: createStatusSummary({ byAgent: [] }),
+    memoryManager: createStatusMemorySearchManager(),
   });
-  mocks.resolveCommandSecretRefsViaGateway.mockResolvedValue({
-    resolvedConfig: {
-      session: {},
-      gateway: {},
-      agents: {
-        defaults: {
-          memorySearch: {
-            provider: "local",
-            local: { modelPath: "/tmp/model.gguf" },
-            fallback: "none",
-          },
-        },
-      },
-    },
-    diagnostics: [],
-  });
-  mocks.getUpdateCheckResult.mockResolvedValue({
-    installKind: "git",
-    git: null,
-    registry: null,
-  });
-  mocks.getAgentLocalStatuses.mockResolvedValue({
-    defaultId: "main",
-    agents: [],
-  });
-  mocks.getStatusSummary.mockResolvedValue({
-    linkChannel: undefined,
-    sessions: { count: 0, paths: [], defaults: {}, recent: [], byAgent: [] },
-  });
-  mocks.buildGatewayConnectionDetails.mockReturnValue({
-    url: "ws://127.0.0.1:18789",
-    urlSource: "default",
-  });
-  mocks.resolveGatewayProbeAuthResolution.mockReturnValue({
-    auth: {},
-    warning: undefined,
-  });
-  mocks.probeGateway.mockResolvedValue({
-    ok: false,
-    url: "ws://127.0.0.1:18789",
-    connectLatencyMs: null,
-    error: "timeout",
-    close: null,
-    health: null,
-    status: null,
-    presence: null,
-    configSnapshot: null,
-  });
+  mocks.getStatusCommandSecretTargetIds.mockReturnValue([]);
   mocks.resolveMemorySearchConfig.mockReturnValue({
     store: { path: "/tmp/main.sqlite" },
-  });
-  mocks.getMemorySearchManager.mockResolvedValue({
-    manager: {
-      probeVectorAvailability: vi.fn(async () => true),
-      status: vi.fn(() => ({ files: 0, chunks: 0, dirty: false })),
-      close: vi.fn(async () => {}),
-    },
   });
 });
 
@@ -170,7 +120,34 @@ vi.mock("../plugins/status.js", () => ({
 
 const { scanStatusJsonFast } = await import("./status.scan.fast-json.js");
 
+afterEach(() => {
+  loggingState.forceConsoleToStderr = originalForceStderr;
+});
+
 describe("scanStatusJsonFast", () => {
+  it("routes plugin logs to stderr during deferred plugin loading", async () => {
+    mocks.hasPotentialConfiguredChannels.mockReturnValue(true);
+
+    let stderrDuringLoad = false;
+    mocks.ensurePluginRegistryLoaded.mockImplementation(() => {
+      stderrDuringLoad = loggingState.forceConsoleToStderr;
+    });
+
+    await scanStatusJsonFast({}, {} as never);
+
+    expect(mocks.ensurePluginRegistryLoaded).toHaveBeenCalled();
+    expect(stderrDuringLoad).toBe(true);
+    expect(loggingState.forceConsoleToStderr).toBe(false);
+  });
+
+  it("skips plugin compatibility loading even when configured channels are present", async () => {
+    mocks.hasPotentialConfiguredChannels.mockReturnValue(true);
+
+    await scanStatusJsonFast({}, {} as never);
+
+    expect(mocks.buildPluginCompatibilityNotices).not.toHaveBeenCalled();
+  });
+
   it("skips memory inspection for the lean status --json fast path", async () => {
     const result = await scanStatusJsonFast({}, {} as never);
 
@@ -198,31 +175,16 @@ describe("scanStatusJsonFast", () => {
   });
 
   it("skips gateway and update probes on cold-start status --json", async () => {
-    const originalVitest = process.env.VITEST;
-    const originalVitestPoolId = process.env.VITEST_POOL_ID;
-    const originalNodeEnv = process.env.NODE_ENV;
-    delete process.env.VITEST;
-    delete process.env.VITEST_POOL_ID;
-    delete process.env.NODE_ENV;
-    try {
-      await scanStatusJsonFast({}, {} as never);
-    } finally {
-      if (originalVitest === undefined) {
-        delete process.env.VITEST;
-      } else {
-        process.env.VITEST = originalVitest;
-      }
-      if (originalVitestPoolId === undefined) {
-        delete process.env.VITEST_POOL_ID;
-      } else {
-        process.env.VITEST_POOL_ID = originalVitestPoolId;
-      }
-      if (originalNodeEnv === undefined) {
-        delete process.env.NODE_ENV;
-      } else {
-        process.env.NODE_ENV = originalNodeEnv;
-      }
-    }
+    await withTemporaryEnv(
+      {
+        VITEST: undefined,
+        VITEST_POOL_ID: undefined,
+        NODE_ENV: undefined,
+      },
+      async () => {
+        await scanStatusJsonFast({}, {} as never);
+      },
+    );
 
     expect(mocks.getUpdateCheckResult).not.toHaveBeenCalled();
     expect(mocks.probeGateway).not.toHaveBeenCalled();

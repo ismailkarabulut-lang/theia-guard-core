@@ -7,6 +7,10 @@ import { openBoundaryFile } from "../../infra/boundary-file-read.js";
 import { createSubsystemLogger } from "../../logging/subsystem.js";
 import { extractKeywords, isQueryStopWordToken } from "../../memory/query-expansion.js";
 import {
+  hasMeaningfulConversationContent,
+  isRealConversationMessage,
+} from "../compaction-real-conversation.js";
+import {
   BASE_CHUNK_RATIO,
   type CompactionSummarizationInstructions,
   MIN_CHUNK_RATIO,
@@ -62,6 +66,9 @@ const STRICT_EXACT_IDENTIFIERS_INSTRUCTION =
   "For ## Exact identifiers, preserve literal values exactly as seen (IDs, URLs, file paths, ports, hashes, dates, times).";
 const POLICY_OFF_EXACT_IDENTIFIERS_INSTRUCTION =
   "For ## Exact identifiers, include identifiers only when needed for continuity; do not enforce literal-preservation rules.";
+const compactionSafeguardDeps = {
+  summarizeInStages,
+};
 
 type ToolFailure = {
   toolCallId: string;
@@ -181,10 +188,6 @@ function formatToolFailuresSection(failures: ToolFailure[]): string {
     lines.push(`- ...and ${failures.length - MAX_TOOL_FAILURES} more`);
   }
   return `\n\n## Tool Failures\n${lines.join("\n")}`;
-}
-
-function isRealConversationMessage(message: AgentMessage): boolean {
-  return message.role === "user" || message.role === "assistant" || message.role === "toolResult";
 }
 
 function computeFileLists(fileOps: FileOperations): {
@@ -774,8 +777,12 @@ async function readWorkspaceContextForSummary(): Promise<string> {
 export default function compactionSafeguardExtension(api: ExtensionAPI): void {
   api.on("session_before_compact", async (event, ctx) => {
     const { preparation, customInstructions: eventInstructions, signal } = event;
-    const hasRealSummarizable = preparation.messagesToSummarize.some(isRealConversationMessage);
-    const hasRealTurnPrefix = preparation.turnPrefixMessages.some(isRealConversationMessage);
+    const hasRealSummarizable = preparation.messagesToSummarize.some((message, index, messages) =>
+      isRealConversationMessage(message, messages, index),
+    );
+    const hasRealTurnPrefix = preparation.turnPrefixMessages.some((message, index, messages) =>
+      isRealConversationMessage(message, messages, index),
+    );
     if (!hasRealSummarizable && !hasRealTurnPrefix) {
       // When there are no summarizable messages AND no real turn-prefix content,
       // cancelling compaction leaves context unchanged but the SDK re-triggers
@@ -902,7 +909,7 @@ export default function compactionSafeguardExtension(api: ExtensionAPI): void {
                   Math.floor(contextWindowTokens * droppedChunkRatio) -
                     SUMMARIZATION_OVERHEAD_TOKENS,
                 );
-                droppedSummary = await summarizeInStages({
+                droppedSummary = await compactionSafeguardDeps.summarizeInStages({
                   messages: pruned.droppedMessagesList,
                   model,
                   apiKey,
@@ -973,7 +980,7 @@ export default function compactionSafeguardExtension(api: ExtensionAPI): void {
         try {
           historySummary =
             messagesToSummarize.length > 0
-              ? await summarizeInStages({
+              ? await compactionSafeguardDeps.summarizeInStages({
                   messages: messagesToSummarize,
                   model,
                   apiKey,
@@ -989,7 +996,7 @@ export default function compactionSafeguardExtension(api: ExtensionAPI): void {
 
           summaryWithoutPreservedTurns = historySummary;
           if (preparation.isSplitTurn && turnPrefixMessages.length > 0) {
-            const prefixSummary = await summarizeInStages({
+            const prefixSummary = await compactionSafeguardDeps.summarizeInStages({
               messages: turnPrefixMessages,
               model,
               apiKey,
@@ -1107,6 +1114,9 @@ export default function compactionSafeguardExtension(api: ExtensionAPI): void {
 }
 
 export const __testing = {
+  setSummarizeInStagesForTest(next?: typeof summarizeInStages) {
+    compactionSafeguardDeps.summarizeInStages = next ?? summarizeInStages;
+  },
   collectToolFailures,
   formatToolFailuresSection,
   splitPreservedRecentTurns,
@@ -1124,6 +1134,8 @@ export const __testing = {
   computeAdaptiveChunkRatio,
   isOversizedForSummary,
   readWorkspaceContextForSummary,
+  hasMeaningfulConversationContent,
+  isRealConversationMessage,
   BASE_CHUNK_RATIO,
   MIN_CHUNK_RATIO,
   SAFETY_MARGIN,

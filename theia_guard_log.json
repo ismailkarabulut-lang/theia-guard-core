@@ -1,0 +1,186 @@
+[
+  {
+    "timestamp": "2026-03-21T12:29:47.305917",
+    "command": "ls",
+    "risk_level": "low",
+    "decision": "auto_approved",
+    "output_summary": "[DRY RUN] Would execute: ls",
+    "command_hash": "c7b68ac37f36"
+  },
+  {
+    "timestamp": "2026-03-21T12:30:07.483447",
+    "command": "pip install requests",
+    "risk_level": "medium",
+    "decision": "approved",
+    "output_summary": "[DRY RUN] Would execute: pip install requests",
+    "command_hash": "4edf1b24f48a"
+  },
+  {
+    "timestamp": "2026-03-21T12:30:18.449292",
+    "command": "rm -rf /tmp/test",
+    "risk_level": "critical",
+    "decision": "blocked",
+    "output_summary": "",
+    "command_hash": "2fc3ad14f3d4"
+  },
+  {
+    "timestamp": "2026-03-21T12:30:30.489239",
+    "command": "rm -rf /",
+    "risk_level": "critical",
+    "decision": "blocked",
+    "output_summary": "",
+    "command_hash": "5c7923bd67b0"
+  },
+  {
+    "timestamp": "2026-03-21T13:23:10.013424",
+    "command": "pip install requests",
+    "risk_level": "medium",
+    "decision": "approved_telegram",
+    "output_summary": "Requirement already satisfied: requests in ./venv/lib/python3.13/site-packages (2.32.5)\nRequirement already satisfied: charset_normalizer<4,>=2 in ./venv/lib/python3.13/site-packages (from requests) (",
+    "command_hash": "4edf1b24f48a"
+  },
+  {
+    "timestamp": "2026-03-21T13:24:27.327995",
+    "command": "rm -rf /tmp/test",
+    "risk_level": "critical",
+    "decision": "blocked",
+    "output_summary": "",
+    "command_hash": "2fc3ad14f3d4"
+  },
+  {
+    "timestamp": "2026-03-21T13:26:34.083455",
+    "command": "sudo apt install nginx",
+    "risk_level": "medium",
+    "decision": "approved_telegram",
+    "output_summary": "",
+    "command_hash": "0b695c0e1638"
+  },
+  {
+    "timestamp": "2026-03-21T13:26:39.544869",
+    "command": "181732İSOt",
+    "risk_level": "low",
+    "decision": "auto_approved",
+    "output_summary": "",
+    "command_hash": "6e6dd31e0e38"
+  },
+  {
+    "timestamp": "2026-03-21T13:27:37.899379",
+    "command": "apt install htop",
+    "risk_level": "medium",
+    "decision": "approved_telegram",
+    "output_summary": "",
+    "command_hash": "8b1905f7f410"
+  },
+  {
+    "timestamp": "2026-03-21T13:58:22.446918",
+    "command": "sudo apt install nginx",
+    "risk_level": "medium",
+    "decision": "denied_telegram",
+    "output_summary": "",
+    "command_hash": "0b695c0e1638"
+  },
+  {
+    "timestamp": "2026-03-21T14:00:34.954858",
+    "command": "sudo apt install nginx",
+    "risk_level": "medium",
+    "decision": "approved_telegram",
+    "output_summary": "",
+    "command_hash": "0b695c0e1638"
+  },
+  {
+    "timestamp": "2026-03-21T14:19:59.111051",
+    "command": "rm -rf /tmp/test",
+    "risk_level": "critical",
+    "decision": "blocked",
+    "output_summary": "",
+    "command_hash": "2fc3ad14f3d4"
+  },
+  {
+    "timestamp": "2026-03-21T14:41:11.686697",
+    "command": "ls",
+    "risk_level": "low",
+    "decision": "auto_approved",
+    "output_summary": "gatekeeper.py\nLICENSE\n__pycache__\nREADME.md\ntelegram_approval.py\ntheia_guard_log.json\nvenv\n",
+    "command_hash": "c7b68ac37f36"
+  },
+  {
+    "timestamp": "2026-03-21T14:41:44.917457",
+    "command": "sudo apt install nginx",
+    "risk_level": "medium",
+    "decision": "approved_telegram",
+    "output_summary": "",
+    "command_hash": "0b695c0e1638"
+  },
+  {
+    "timestamp": "2026-03-21T14:42:09.055801",
+    "command": "rm -rf /tmp/test",
+    "risk_level": "medium",
+    "decision": "approved_telegram",
+    "output_summary": "",
+    "command_hash": "2fc3ad14f3d4"
+  },
+  {
+    "timestamp": "2026-03-21T14:42:41.629748",
+    "command": "rm -rf /",
+    "risk_level": "critical",
+    "decision": "blocked",
+    "output_summary": "",
+    "command_hash": "5c7923bd67b0"
+  },
+  {
+    "timestamp": "2026-03-21T14:43:05.201603",
+    "command": "rm -rf /etc",
+    "risk_level": "critical",
+    "decision": "blocked",
+    "output_summary": "",
+    "command_hash": "227b75292fe2"
+  },
+  {
+    "timestamp": "2026-03-21T15:15:09.106019",
+    "command": "ls",
+    "risk_level": "low",
+    "decision": "auto_approved",
+    "output_summary": "gatekeeper.py\nLICENSE\n__pycache__\nREADME.md\ntelegram_approval.py\ntheia_guard_log.json\nvenv\n",
+    "command_hash": "c7b68ac37f36"
+  },
+  {
+    "timestamp": "2026-03-21T15:16:33.207268",
+    "command": "sudo apt install nginx",
+    "risk_level": "medium",
+    "decision": "approved_telegram",
+    "output_summary": "",
+    "command_hash": "0b695c0e1638"
+  },
+  {
+    "timestamp": "2026-03-21T15:16:51.130730",
+    "command": "rm -rf /tmp/test",
+    "risk_level": "medium",
+    "decision": "approved_telegram",
+    "output_summary": "",
+    "command_hash": "2fc3ad14f3d4"
+  },
+  {
+    "timestamp": "2026-03-21T15:17:04.529264",
+    "command": "rm -rf /",
+    "risk_level": "critical",
+    "decision": "blocked",
+    "output_summary": "",
+    "command_hash": "5c7923bd67b0"
+  },
+  {
+    "timestamp": "2026-03-21T15:17:19.456655",
+    "command": "rm -rf /etc",
+    "risk_level": "critical",
+    "decision": "blocked",
+    "output_summary": "",
+    "command_hash": "227b75292fe2"
+  },
+  {
+    "timestamp": "2026-03-22T11:33:35.851888",
+    "command": "apt install htop",
+    "risk_level": "medium",
+    "decision": "denied_telegram",
+    "output_summary": "",
+    "command_hash": "8b1905f7f410"
+  }
+]

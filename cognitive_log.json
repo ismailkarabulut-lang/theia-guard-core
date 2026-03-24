@@ -1,0 +1,29 @@
+[
+  {
+    "id": 1,
+    "chat_id": 7875201938,
+    "topic": "yeni proje fikri heyecan 5",
+    "emotion": "notr",
+    "intensity": 3,
+    "timestamp": "2026-03-21 21:31:19",
+    "action_taken": false
+  },
+  {
+    "id": 2,
+    "chat_id": 7875201938,
+    "topic": "yeni proje fikri 5",
+    "emotion": "heyecan",
+    "intensity": 3,
+    "timestamp": "2026-03-21 23:03:02",
+    "action_taken": false
+  },
+  {
+    "id": 3,
+    "chat_id": 7875201938,
+    "topic": "yeni proje fikri 5",
+    "emotion": "heyecan",
+    "intensity": 3,
+    "timestamp": "2026-03-21 23:12:22",
+    "action_taken": false
+  }
+]

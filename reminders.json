@@ -1,0 +1,26 @@
+[
+  {
+    "id": 1,
+    "chat_id": 7875201938,
+    "task": "'te toplantı",
+    "datetime": "2026-03-22 14:00:00",
+    "status": "active",
+    "created": "2026-03-21 21:12:17"
+  },
+  {
+    "id": 2,
+    "chat_id": 7875201938,
+    "task": "21:30 su içmeyi",
+    "datetime": "2026-03-21 21:30:00",
+    "status": "sent",
+    "created": "2026-03-21 21:15:00"
+  },
+  {
+    "id": 3,
+    "chat_id": 7875201938,
+    "task": "duş almayı hatırlat",
+    "datetime": "2026-03-21 23:16:30",
+    "status": "sent",
+    "created": "2026-03-21 21:16:30"
+  }
+]
